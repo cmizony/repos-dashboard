@@ -1,0 +1,26 @@
+{
+  "globals": {
+    "moment": false,
+    "d3":    false,
+    "_": false,
+    /* JASMINE */
+    "jasmine":     false,
+    "inspect":     false,
+    "inject":      false,
+    "expect":      false,
+    "describe":    false,
+    "fdescribe":    false,
+    "it":          false,
+    "fit":          false,
+    "before":      false,
+    "beforeEach":  false,
+    "after":       false,
+    "afterEach":   false,
+    "spyOn":       false
+  },
+  "asi": true,
+  "lastsemic": true,
+  "predef": ["angular"],
+  "node": true,
+  "expr": true
+}

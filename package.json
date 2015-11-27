@@ -1,0 +1,16 @@
+{
+  "name": "repos-dashboard",
+  "version": "1.0.0",
+  "description": "Create and visualize metrics from Github repos",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Camille Mizony",
+  "license": "ISC",
+  "dependencies": {
+    "github": "^0.2.4",
+    "lodash": "^3.10.1",
+    "moment": "^2.10.6"
+  }
+}
