@@ -1,5 +1,7 @@
 var githubAPI = require('github')
+var Q = require('q')
 var _ = require('lodash')
+var fs = require('fs')
 
 /**
 * @module Load pull requests from repos
@@ -43,6 +45,36 @@ module.exports = {
   },
 
   /**
+   * Remove all cached file for a given repository
+   *
+   * @method refreshCache
+   * @param {String} repo
+   */
+  refreshCache: function(repo) {
+    /**
+    * Remove folder recursively and synchronously
+    *
+    * @method deleteFolderRecursive
+    * @param {String} path
+    */
+    var deleteFolderRecursive = function(path) {
+      if(fs.existsSync(path)) {
+        fs.readdirSync(path).forEach(function(file,index){
+          var curPath = path + "/" + file
+          if(fs.lstatSync(curPath).isDirectory()) { // recurse
+            deleteFolderRecursive(curPath)
+          } else { // delete file
+            fs.unlinkSync(curPath)
+          }
+        })
+        fs.rmdirSync(path)
+      }
+    }
+
+    deleteFolderRecursive('data/' + repo)
+  },
+
+  /**
   * Get recent closed pull requests of a github repository
   *
   * @method getPullRequests
@@ -52,15 +84,18 @@ module.exports = {
   */
   getPullRequests: function(user, repo, months) {
     var module = this
+    var deferred = Q.defer()
+
     if (!module.github) {
       module.initialize()
     }
 
-    var prConfig = {
-      user:   user || module.defaultConfig.user,
-      repo:   repo || module.defaultConfig.repo,
-      months:  months || module.defaultConfig.months
-    }
+    var prConfig      = {}
+    prConfig.user     = user || module.defaultConfig.user
+    prConfig.repo     = repo || module.defaultConfig.repo
+    prConfig.months   = months || module.defaultConfig.months
+    prConfig.repoPath = 'data/' + prConfig.repo
+    prConfig.prPath   = prConfig.repoPath + '/pullRequests.json'
 
     module.repos[prConfig.repo] = [] // Clean pull of repository
 
@@ -94,13 +129,37 @@ module.exports = {
             getRepoPullRequests(page + 1, result)
           } else {
             module.repos[prConfig.repo] = result
-            console.log(result.length + ' PR added to module.repos.' + prConfig.repo)
+
+            // Create pullRequests.json cache file
+            fs.mkdirSync(prConfig.repoPath)
+            fs.writeFileSync(prConfig.prPath, JSON.stringify(result, false, 2))
+
+            deferred.resolve(result)
+            console.log(result.length + ' Pull requests loaded from Github')
           }
         }
       })
     }
 
-    // Get last X months of pull requests
-    getRepoPullRequests(1, [])
+    if (fs.existsSync(prConfig.prPath)) {
+      fs.readFile(prConfig.prPath, 'utf8', function(error, data) {
+        var result = JSON.parse(data)
+        module.repos[prConfig.repo] = result
+
+        deferred.resolve(result)
+        console.log(result.length + ' Pull requests loaded from cache');
+      })
+    } else {
+      // Query last X months of pull requests using Github API
+      getRepoPullRequests(1, [])
+    }
+
+    return deferred.promise;
+  },
+
+  getCommitsAsync: function(repo) {
+  },
+
+  getCommentsAsync: function(repo) {
   }
 }
