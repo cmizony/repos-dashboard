@@ -9,9 +9,10 @@ module.exports = {
   * @returns {Number}
   */
   getAverageWords: function(pullRequests) {
-    return _.reduce(pullRequests, function(result, pr) {
-      return result + pr.body.split(' ').length
-    }, 0) / pullRequests.length
+    return pr.body === null && typeof pr.body === 'object' ? 0 :
+      _.reduce(pullRequests, function(result, pr) {
+        result + pr.body.split(' ').length
+      }, 0) / pullRequests.length
   },
 
   getAverageCommits: function(pullRequests) {
