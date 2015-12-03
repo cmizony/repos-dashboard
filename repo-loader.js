@@ -10,8 +10,6 @@ var fs = require('fs')
 */
 module.exports = {
   github: null,
-  repos: {},
-  defaultConfig: null,
 
   /**
   * Initialize the module to use github.com api version 3 with ssl encryption
@@ -35,12 +33,6 @@ module.exports = {
         username: process.env.GITHUB_USERNAME,
         password: process.env.GITHUB_PASSWORD
       })
-    }
-
-    this.defaultConfig = {
-      user: 'docker',
-      repo: 'docker',
-      months: 1
     }
   },
 
@@ -90,14 +82,12 @@ module.exports = {
       module.initialize()
     }
 
-    var prConfig      = {}
-    prConfig.user     = user || module.defaultConfig.user
-    prConfig.repo     = repo || module.defaultConfig.repo
-    prConfig.months   = months || module.defaultConfig.months
-    prConfig.repoPath = 'data/' + prConfig.repo
-    prConfig.prPath   = prConfig.repoPath + '/pullRequests.json'
-
-    module.repos[prConfig.repo] = [] // Clean pull of repository
+    var queryConfig      = {}
+    queryConfig.user     = user
+    queryConfig.repo     = repo
+    queryConfig.months   = months
+    queryConfig.repoPath = 'data/' + queryConfig.repo
+    queryConfig.prPath   = queryConfig.repoPath + '/pullRequests.json'
 
     /**
     * Recursively load N pull-requests for a repository based on created date
@@ -105,11 +95,12 @@ module.exports = {
     * @method getRepoPullRequests
     * @param {Integer} page - current page to load
     * @param {Array} result - pull requests alread loaded
+    * @returns {Object} promise
     */
     var getRepoPullRequests = function(page, result) {
       module.github.pullRequests.getAll({
-        user: prConfig.user,
-        repo: prConfig.repo,
+        user: queryConfig.user,
+        repo: queryConfig.repo,
         per_page: 100,
         page: page,
         state: 'closed'
@@ -120,7 +111,7 @@ module.exports = {
         } else {
           var filteredData = _.filter(data, function(pr) {
             return new Date(pr.created_at).getTime() >=
-              new Date().getTime() - (prConfig.months * 30 * 86400 * 1000)
+              new Date().getTime() - (queryConfig.months * 30 * 86400 * 1000)
           })
 
           result = _.union(result, filteredData)
@@ -128,23 +119,30 @@ module.exports = {
           if (filteredData.length === data.length) {
             getRepoPullRequests(page + 1, result)
           } else {
-            module.repos[prConfig.repo] = result
-
             // Create pullRequests.json cache file
-            fs.mkdirSync(prConfig.repoPath)
-            fs.writeFileSync(prConfig.prPath, JSON.stringify(result, false, 2))
+            fs.mkdirSync(queryConfig.repoPath)
+            fs.writeFileSync(queryConfig.prPath, JSON.stringify(result, false, 2))
 
-            deferred.resolve(result)
+            deferred.resolve(_.map(result, function(pullRequest) {
+              pullRequest.auth_user = queryConfig.user
+              pullRequest.auth_repo = queryConfig.repo
+              return pullRequest
+            }))
             console.log(result.length + ' Pull requests loaded from Github')
           }
         }
       })
     }
 
-    if (fs.existsSync(prConfig.prPath)) {
-      fs.readFile(prConfig.prPath, 'utf8', function(error, data) {
-        var result = JSON.parse(data)
-        module.repos[prConfig.repo] = result
+    if (fs.existsSync(queryConfig.prPath)) {
+      fs.readFile(queryConfig.prPath, 'utf8', function(error, data) {
+        var result
+        try {
+          result = JSON.parse(data)
+        } catch (error) {
+          deferred.reject(new Error(error))
+          return deferred.promise;
+        }
 
         deferred.resolve(result)
         console.log(result.length + ' Pull requests loaded from cache');
@@ -157,9 +155,51 @@ module.exports = {
     return deferred.promise;
   },
 
-  getCommitsAsync: function(repo) {
+  getPullRequestsCommits: function(repo) {
   },
 
-  getCommentsAsync: function(repo) {
+  /**
+  * Get all file comments for a Github repository
+  *
+  * @method getPullRequestsComments
+  * @param {Array} pullRequests
+  * @TODO Get file comments and issue comments
+  * @TODO Get more than 100 comments per PR
+  * @TODO Add caching strategy to comments
+  * @returns {Object} promise
+  */
+  getPullRequestsComments: function(pullRequests) {
+    var module = this
+
+    if (!module.github) {
+      module.initialize()
+    }
+
+    var promises = []
+    _.forEach(pullRequests, function(pullRequest) {
+      var deferred = Q.defer()
+      module.github.pullRequests.getComments({
+        user: pullRequest.auth_user,
+        repo: pullRequest.auth_repo,
+        number: pullRequest.number,
+        per_page: 100
+      }, function(error, comments) {
+        if (error) {
+          deferred.reject(new Error(error))
+          console.log('Error loading Comments for Pull request #' + pullRequest.number)
+        } else {
+          delete comments.meta
+          deferred.resolve(_.map(comments, function(comment) {
+            comment.pull_request_number = pullRequest.number
+            comment.auth_user = pullRequest.auth_user
+            comment.auth_repo = pullRequest.auth_repo
+            return comment
+          }))
+        }
+      })
+      promises.push(deferred.promise)
+    })
+
+    return Q.all(promises)
   }
 }
