@@ -95,7 +95,7 @@ module.exports = {
     * @method getRepoPullRequests
     * @param {Integer} page - current page to load
     * @param {Array} result - pull requests alread loaded
-    * @returns {Object} promise
+    * @returns {Object} promise resolving to pull requests array
     */
     var getRepoPullRequests = function(page, result) {
       module.github.pullRequests.getAll({
@@ -119,15 +119,17 @@ module.exports = {
           if (filteredData.length === data.length) {
             getRepoPullRequests(page + 1, result)
           } else {
-            // Create pullRequests.json cache file
-            fs.mkdirSync(queryConfig.repoPath)
-            fs.writeFileSync(queryConfig.prPath, JSON.stringify(result, false, 2))
-
+            // Update pull requests with meta data
             deferred.resolve(_.map(result, function(pullRequest) {
               pullRequest.auth_user = queryConfig.user
               pullRequest.auth_repo = queryConfig.repo
               return pullRequest
             }))
+
+            // Create pullRequests.json cache file
+            fs.mkdirSync(queryConfig.repoPath)
+            fs.writeFileSync(queryConfig.prPath, JSON.stringify(result, false, 2))
+
             console.log(result.length + ' Pull requests loaded from Github')
           }
         }
@@ -155,18 +157,59 @@ module.exports = {
     return deferred.promise;
   },
 
-  getPullRequestsCommits: function(repo) {
+  /**
+  * Get all commits related to some pull requests
+  *
+  * @method getPullRequestsComments
+  * @param {Array} pullRequests
+  * @TODO Get more than 100 commits per PR
+  * @TODO Add caching strategy to comments
+  * @return {Object} promise resolving to commits array
+  */
+  getPullRequestsCommits: function(pullRequests) {
+    var module = this
+
+    if (!module.github) {
+      module.initialize()
+    }
+
+    var promises = []
+    _.forEach(pullRequests, function(pullRequest) {
+      var deferred = Q.defer()
+      module.github.pullRequests.getCommits({
+        user: pullRequest.auth_user,
+        repo: pullRequest.auth_repo,
+        number: pullRequest.number,
+        per_page: 100
+      }, function(error, commits) {
+        if (error) {
+          deferred.reject(new Error(error))
+          console.log('Error loading Commits for Pull request #' + pullRequest.number)
+        } else {
+          delete commits.meta
+          deferred.resolve(_.map(commits, function(commit) {
+            commit.pull_request_number = pullRequest.number
+            commit.auth_user = pullRequest.auth_user
+            commit.auth_repo = pullRequest.auth_repo
+            return commit
+          }))
+        }
+      })
+      promises.push(deferred.promise)
+    })
+
+    return Q.all(promises)
   },
 
   /**
-  * Get all file comments for a Github repository
+  * Get all file comments related to some pull requests
   *
   * @method getPullRequestsComments
   * @param {Array} pullRequests
   * @TODO Get file comments and issue comments
   * @TODO Get more than 100 comments per PR
   * @TODO Add caching strategy to comments
-  * @returns {Object} promise
+  * @returns {Object} promise resolving to comments array
   */
   getPullRequestsComments: function(pullRequests) {
     var module = this
