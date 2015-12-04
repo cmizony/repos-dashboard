@@ -1,0 +1,108 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.10.10/css/dataTables.bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="css/main.css">
+    </head>
+    <body>
+
+    <div class="jumbotron">
+      <div class="container">
+        <h1>Repositories metrics</h1>
+        <p>Create and visualize metrics from Github repositories. Shows most recent <b id="metrics-duration">N months</b> of data.</p>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <h1><i class="glyphicon glyphicon-folder-open"></i>
+          <span id="organization-name"></span>:
+          <span id="period-start"></span> -
+          <span id="period-end"></span>
+      </h1>
+
+      <table id="repositories" class="display table table-bordered table-hover" width="100%">
+        <thead>
+          <tr>
+            <th  title="Repository name">
+              Repo
+            </th>
+            <th  title="Number of pull requests">
+              # PR
+            </th>
+            <th  title="Average words per pull requests">
+              PR desc avg
+            </th>
+            <th  title="Average words per commits messages">
+              Commits desc avg
+            </th>
+            <th  title="Average number of commits per pull requests">
+              Commits # avg
+            </th>
+            <th  title="Average number of comments per pull requests">
+              Comments # avg
+            </th>
+            <th  title="Percentage of commits with no description">
+              % Commits no desc
+            </th>
+            <th  title="Percentage of pull requests with no description">
+              % PR no desc
+            </th>
+            <th  title="Metrics comparison between all repositories">
+              Score
+            </th>
+          </tr>
+        </thead>
+        <tfoot>
+          <tr>
+            <th  title="Repository name">
+              Repo
+            </th>
+            <th  title="Number of pull requests">
+              # PR
+            </th>
+            <th  title="Average words per pull requests">
+              PR desc avg
+            </th>
+            <th  title="Average words per commits messages">
+              Commits desc avg
+            </th>
+            <th  title="Average number of commits per pull requests">
+              Commits # avg
+            </th>
+            <th  title="Average number of comments per pull requests">
+              Comments # avg
+            </th>
+            <th  title="Percentage of commits with no description">
+              % Commits no desc
+            </th>
+            <th  title="Percentage of pull requests with no description">
+              % PR no desc
+            </th>
+            <th title="Metrics comparison between all repositories">
+              Score
+            </th>
+          </tr>
+        </tfoot>
+        <tbody>
+        </tbody>
+      </table>
+
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.10/js/dataTables.bootstrap.min.js"></script>
+
+    <script src="js/repos-metrics.js"></script>
+    <script src="js/main.js"></script>
+    </body>
+  </html>
