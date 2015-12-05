@@ -4,8 +4,10 @@ Create table view of metrics for all repositories of a given Github organization
 
 ## Getting started
 
-The project is designed to be hosted on CDN (like S3).
-**Following instructions are work in progress**
+* The project is designed to be hosted on CDN (like S3).
+* To generate the source documentation use: `jsdoc modules/*.js --readme README.md`
+
+**Following instructions are work in progress (not all implemented)**
 
 ### Generate metrics data
 
@@ -22,7 +24,7 @@ loader.createCache('myOrganzation').then(function(data){
 
 Open `dashboard/index.html`
 
-![Demo dashboard](demo.png)
+![Demo dashboard result](demo.png)
 
 ## Metrics supported
 

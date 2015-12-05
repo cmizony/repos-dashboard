@@ -1,6 +1,12 @@
 var githubAPI = require('github')
 var _ = require('lodash')
 
+/**
+* @module Repo-metrics
+* @description Generate pull requests metrics
+* @author Camille Mizony
+* @version 1.0.0
+*/
 module.exports = {
   /**
   * Return the word average of the pull requests description
