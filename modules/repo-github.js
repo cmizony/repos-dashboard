@@ -4,7 +4,8 @@ var _ = require('lodash')
 var fs = require('fs')
 
 /**
-* @module Github API utils wrapper
+* @module Repo-github
+* @description Github API utils wrapper
 * @author Camille Mizony
 * @version 1.0.0
 */

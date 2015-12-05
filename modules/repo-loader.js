@@ -4,7 +4,8 @@ var _ = require('lodash')
 var fs = require('fs')
 
 /**
-* @module Load pull requests from repos
+* @module Repo-loader
+* @description Cache and Load repos pull requests
 * @author Camille Mizony
 * @version 1.0.0
 */
