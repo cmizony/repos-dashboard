@@ -4,7 +4,7 @@ var _ = require('lodash')
 var fs = require('fs')
 
 /**
-* @module Load pull requests from repos
+* @module Github API utils wrapper
 * @author Camille Mizony
 * @version 1.0.0
 */
@@ -38,64 +38,11 @@ module.exports = {
   },
 
   /**
-   * Remove all cached file for a given organization
-   *
-   * @method refreshCache
-   * @public
-   * @param {String} organization
-   */
-  refreshCache: function(organization) {
-    /**
-    * Remove folder recursively and synchronously
-    *
-    * @method deleteFolderRecursive
-    * @private
-    * @param {String} path
-    */
-    var deleteFolderRecursive = function(path) {
-      if(fs.existsSync(path)) {
-        fs.readdirSync(path).forEach(function(file,index){
-          var curPath = path + "/" + file
-          if(fs.lstatSync(curPath).isDirectory()) { // recurse
-            deleteFolderRecursive(curPath)
-          } else { // delete file
-            fs.unlinkSync(curPath)
-          }
-        })
-        fs.rmdirSync(path)
-      }
-    }
-
-    deleteFolderRecursive('data/' + organization)
-  },
-
-  /**
-  * Load repositories and pull requests on the file system. Skip pull requests
-  * that already exist.
+  * Get API limit rates of current user session
   *
-  * @method createCache
-  * @public
-  * @returns {Object} promise resolving to number of API queries done
+  * @method getRateLimit
+  * @returns {Object} Promise - resolves to rate limits
   */
-  createCache: function(organization) {
-    // getOrganizationRepos
-    // getPullRequests
-    //  getPullRequestsCommits
-    //  getPullRequestsComments
-    //  cache PR
-  },
-
-  /**
-  * Load all organinzation repositories from file system into json object
-  *
-  * @method createCache
-  * @public
-  * @param {String} organization
-  * @returns {Object} promise resolving to organization data
-  */
-  getCache: function(organization) {
-  },
-
   getRateLimit: function() {
     var module = this
     var deferred = Q.defer()
@@ -121,7 +68,7 @@ module.exports = {
   *
   * @TODO current limitation to only 100 maximum
   * @method getPullRequests
-  * @private
+  * @public
   * @param {String} organization
   * @returns {Object} promise resolving to pull requests array
   */
@@ -154,7 +101,7 @@ module.exports = {
   * Get recent closed pull requests of a github repository
   *
   * @method getPullRequests
-  * @private
+  * @public
   * @param {String} organization
   * @param {String} repo
   * @param {Integer} months - history limit
@@ -179,7 +126,7 @@ module.exports = {
     * Recursively load N pull-requests for a repository based on created date
     *
     * @method getRepoPullRequests
-    * @private
+    * @public
     * @param {Integer} page - current page to load
     * @param {Array} result - pull requests alread loaded
     */
@@ -247,7 +194,7 @@ module.exports = {
   * Get all commits related to some pull requests
   *
   * @method getPullRequestsComments
-  * @private
+  * @public
   * @param {Array} pullRequests
   * @TODO Get more than 100 commits per PR
   * @TODO Add caching strategy to comments
@@ -292,7 +239,7 @@ module.exports = {
   * Get all file comments related to some pull requests
   *
   * @method getPullRequestsComments
-  * @private
+  * @public
   * @param {Array} pullRequests
   * @TODO Get file comments and issue comments
   * @TODO Get more than 100 comments per PR
