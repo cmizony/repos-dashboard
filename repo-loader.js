@@ -15,6 +15,7 @@ module.exports = {
   * Initialize the module to use github.com api version 3 with ssl encryption
   *
   * @method initialize
+  * @private
   */
   initialize: function() {
     this.github = new githubAPI({
@@ -37,16 +38,18 @@ module.exports = {
   },
 
   /**
-   * Remove all cached file for a given repository
+   * Remove all cached file for a given organization
    *
    * @method refreshCache
-   * @param {String} repo
+   * @public
+   * @param {String} organization
    */
-  refreshCache: function(repo) {
+  refreshCache: function(organization) {
     /**
     * Remove folder recursively and synchronously
     *
     * @method deleteFolderRecursive
+    * @private
     * @param {String} path
     */
     var deleteFolderRecursive = function(path) {
@@ -63,18 +66,37 @@ module.exports = {
       }
     }
 
-    deleteFolderRecursive('data/' + repo)
+    deleteFolderRecursive('data/' + organization)
   },
 
   /**
-  * Get recent closed pull requests of a github repository
+  * Load repositories and pull requests on the file system. Skip pull requests
+  * that already exist.
   *
-  * @method getPullRequests
-  * @param {String} user
-  * @param {String} repo
-  * @param {Integer} months - history limit
+  * @method createCache
+  * @public
+  * @returns {Object} promise resolving to number of API queries done
   */
-  getPullRequests: function(user, repo, months) {
+  createCache: function(organization) {
+    // getOrganizationRepos
+    // getPullRequests
+    //  getPullRequestsCommits
+    //  getPullRequestsComments
+    //  cache PR
+  },
+
+  /**
+  * Load all organinzation repositories from file system into json object
+  *
+  * @method createCache
+  * @public
+  * @param {String} organization
+  * @returns {Object} promise resolving to organization data
+  */
+  getCache: function(organization) {
+  },
+
+  getRateLimit: function() {
     var module = this
     var deferred = Q.defer()
 
@@ -82,24 +104,88 @@ module.exports = {
       module.initialize()
     }
 
-    var queryConfig      = {}
-    queryConfig.user     = user
-    queryConfig.repo     = repo
-    queryConfig.months   = months
-    queryConfig.repoPath = 'data/' + queryConfig.repo
-    queryConfig.prPath   = queryConfig.repoPath + '/pullRequests.json'
+    module.github.misc.rateLimit({}, function(error, data) {
+      if (error) {
+        console.log('Error loading rate limit')
+        deferred.reject(new Error(error))
+      } else {
+        deferred.resolve(data.rate)
+      }
+    })
+
+    return deferred.promise;
+  },
+
+  /**
+  * Get recent closed pull requests of a github repository
+  *
+  * @TODO current limitation to only 100 maximum
+  * @method getPullRequests
+  * @private
+  * @param {String} organization
+  * @returns {Object} promise resolving to pull requests array
+  */
+  getOrganizationRepos: function(organization) {
+    var module = this
+    var deferred = Q.defer()
+
+    if (!module.github) {
+      module.initialize()
+    }
+
+    module.github.repos.getFromOrg({
+      org: organization,
+      per_page: 100
+    }, function(error, data) {
+      if (error) {
+        console.log('Error loading organization repositories')
+        deferred.reject(new Error(error))
+      } else {
+        deferred.resolve(_.sortBy(data, function(repo) {
+          return Number.MAX_VALUE - new Date(repo.updated_at).getTime()
+        }))
+      }
+    })
+
+    return deferred.promise;
+  },
+
+  /**
+  * Get recent closed pull requests of a github repository
+  *
+  * @method getPullRequests
+  * @private
+  * @param {String} organization
+  * @param {String} repo
+  * @param {Integer} months - history limit
+  * @returns {Object} promise resolving to pull requests array
+  */
+  getPullRequests: function(organization, repo, months) {
+    var module = this
+    var deferred = Q.defer()
+
+    if (!module.github) {
+      module.initialize()
+    }
+
+    var queryConfig          = {}
+    queryConfig.organization = organization
+    queryConfig.repo         = repo
+    queryConfig.months       = months
+    queryConfig.repoPath     = 'data/' + queryConfig.repo
+    queryConfig.prPath       = queryConfig.repoPath + '/pullRequests.json'
 
     /**
     * Recursively load N pull-requests for a repository based on created date
     *
     * @method getRepoPullRequests
+    * @private
     * @param {Integer} page - current page to load
     * @param {Array} result - pull requests alread loaded
-    * @returns {Object} promise resolving to pull requests array
     */
     var getRepoPullRequests = function(page, result) {
       module.github.pullRequests.getAll({
-        user: queryConfig.user,
+        user: queryConfig.organization,
         repo: queryConfig.repo,
         per_page: 100,
         page: page,
@@ -107,7 +193,7 @@ module.exports = {
       }, function(error, data) {
         if (error) {
           console.log('Error loading Pull requests')
-          console.log(JSON.stringify(error, false, 2))
+          deferred.reject(new Error(error))
         } else {
           var filteredData = _.filter(data, function(pr) {
             return new Date(pr.created_at).getTime() >=
@@ -121,7 +207,7 @@ module.exports = {
           } else {
             // Update pull requests with meta data
             deferred.resolve(_.map(result, function(pullRequest) {
-              pullRequest.auth_user = queryConfig.user
+              pullRequest.auth_user = queryConfig.organization
               pullRequest.auth_repo = queryConfig.repo
               return pullRequest
             }))
@@ -161,6 +247,7 @@ module.exports = {
   * Get all commits related to some pull requests
   *
   * @method getPullRequestsComments
+  * @private
   * @param {Array} pullRequests
   * @TODO Get more than 100 commits per PR
   * @TODO Add caching strategy to comments
@@ -205,6 +292,7 @@ module.exports = {
   * Get all file comments related to some pull requests
   *
   * @method getPullRequestsComments
+  * @private
   * @param {Array} pullRequests
   * @TODO Get file comments and issue comments
   * @TODO Get more than 100 comments per PR
