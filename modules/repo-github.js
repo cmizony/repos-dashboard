@@ -54,7 +54,6 @@ module.exports = {
 
     module.github.misc.rateLimit({}, function(error, data) {
       if (error) {
-        console.log('Error loading rate limit')
         deferred.reject(new Error(error))
       } else {
         deferred.resolve(data.rate)
@@ -86,7 +85,6 @@ module.exports = {
       per_page: 100
     }, function(error, data) {
       if (error) {
-        console.log('Error loading organization repositories')
         deferred.reject(new Error(error))
       } else {
         deferred.resolve(_.sortBy(data, function(repo) {
@@ -140,7 +138,6 @@ module.exports = {
         state: 'closed'
       }, function(error, data) {
         if (error) {
-          console.log('Error loading Pull requests')
           deferred.reject(new Error(error))
         } else {
           var filteredData = _.filter(data, function(pr) {
@@ -234,7 +231,6 @@ module.exports = {
     }, function(error, comments) {
       if (error) {
         deferred.reject(new Error(error))
-        console.log('Error loading Comments for Pull request #' + pullRequest.number)
       } else {
         delete comments.meta
         deferred.resolve(_.map(comments, function(comment) {
