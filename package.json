@@ -10,8 +10,12 @@
   "license": "ISC",
   "dependencies": {
     "github": "^0.2.4",
+    "http-server": "^0.8.5",
     "lodash": "^3.10.1",
     "moment": "^2.10.6",
     "q": "^1.4.1"
+  },
+  "devDependencies": {
+    "jsdoc": "^3.4.0"
   }
 }
