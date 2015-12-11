@@ -27,23 +27,24 @@ module.exports = {
   * Generate detailed metrics for given repository
   * @method getRepositoryMetrics
   * @public
-  * @param {Object} repositoryDetails - contains repository and pull_requests properties
+  * @param {Object} repository
+  * @param {Array} pullRequests
   * @retuns {Object} metrics
   */
-  getRepositoryMetrics: function(repositoryDetails) {
+  getRepositoryMetrics: function(repository, pullRequests) {
     var module = this
 
     return {
-      repository:         repositoryDetails.repository.name,
-      language:           repositoryDetails.repository.language,
-      numberPR:           repositoryDetails.pull_requests.length,
-      contributors:       module.getNumberContributors(repositoryDetails.pull_requests),
-      descAvgPR:          module.getAveragePullRequestsWords(repositoryDetails.pull_requests),
-      numberAvgCommits:   module.getAverageCommitsNumber(repositoryDetails.pull_requests),
-      numberAvgComments:  module.getAverageCommentsNumber(repositoryDetails.pull_requests),
-      noDescPR:           module.getPercentPullRequestsNoDesc(repositoryDetails.pull_requests),
-      noDescCommits:      module.getPercentCommitsNoDesc(repositoryDetails.pull_requests),
-      descAvgCommits:     module.getAverageCommitsWords(repositoryDetails.pull_requests)
+      repository:         repository.name,
+      language:           repository.language,
+      numberPR:           pullRequests.length,
+      contributors:       module.getNumberContributors(pullRequests),
+      descAvgPR:          module.getAveragePullRequestsWords(pullRequests),
+      numberAvgCommits:   module.getAverageCommitsNumber(pullRequests),
+      numberAvgComments:  module.getAverageCommentsNumber(pullRequests),
+      noDescPR:           module.getPercentPullRequestsNoDesc(pullRequests),
+      noDescCommits:      module.getPercentCommitsNoDesc(pullRequests),
+      descAvgCommits:     module.getAverageCommitsWords(pullRequests)
     }
   },
 

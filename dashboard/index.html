@@ -9,6 +9,8 @@
 
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdn.datatables.net/1.10.10/css/dataTables.bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.1.0/css/buttons.dataTables.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/select/1.1.0/css/select.dataTables.min.css">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css">
         <link rel="stylesheet" href="css/main.css">
     </head>
@@ -17,7 +19,7 @@
     <div class="jumbotron">
       <div class="container">
         <h1>Repositories metrics</h1>
-        <p>Create and visualize metrics from Github repositories. Shows <b id="metrics-duration">N months</b> of data.</p>
+        <p>Create and visualize metrics from Github repositories. Shows up to <b id="metrics-duration">N months</b> of data.</p>
       </div>
     </div>
 
@@ -27,7 +29,16 @@
           <span id="organization-name"></span>
           organization
       </h1>
-      <p><small>Last updated on <span id="last-update"></span></small></p>
+
+      <div class="row">
+        <div class="col-md-3">
+          <select id="filter-tag" class="form-control"></select>
+        </div>
+        <div class="col-md-9">
+          <p><small>Last updated on <span id="last-update"></span></small></p>
+        </div>
+      </div>
+      <br>
 
       <table id="repositories" class="display table table-bordered table-hover" width="100%">
         <thead>
@@ -72,7 +83,15 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/select/1.1.0/js/dataTables.select.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.1.0/js/dataTables.buttons.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.10/js/dataTables.bootstrap.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
+    <script src="https://cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/pdfmake.min.js"></script>
+    <script src="https://cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.1.0/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.1.0/js/buttons.print.min.js"></script>
 
     <script src="js/main.js"></script>
     </body>
