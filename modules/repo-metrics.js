@@ -12,14 +12,15 @@ module.exports = {
   * The list of metrics generated
   * @typedef {Object} metrics
   * @property {String} repository
-  * @property {Number} numberPR - count of pull requests
-  * @property {Number} descAvgPR - average words per pull requests
-  * @property {Number} descAvgCommits - average words per pr commit messages
-  * @property {Number} numberAvgCommits - average number commits per pr
+  * @property {String} language
+  * @property {Number} contributors      - number of pull requests creators
+  * @property {Number} numberPR          - count of pull requests
+  * @property {Number} descAvgPR         - average words per pull requests
+  * @property {Number} descAvgCommits    - average words per pr commit messages
+  * @property {Number} numberAvgCommits  - average number commits per pr
   * @property {Number} numberAvgComments - average number comments per pr
-  * @property {Number} noDescCommits - percentage commits without description TODO
-  * @property {Number} noDescPR - percentage pull requests without description
-  * @property {Number} score - TODO
+  * @property {Number} noDescCommits     - percentage commits without description
+  * @property {Number} noDescPR          - percentage pull requests without description
   */
 
   /**
@@ -33,14 +34,48 @@ module.exports = {
     var module = this
 
     return {
-      repository:        repositoryDetails.repository.name,
-      numberPR:          repositoryDetails.pull_requests.length,
-      descAvgPR:         module.getAveragePullRequestsWords(repositoryDetails.pull_requests),
-      numberAvgCommits:  module.getAverageCommitsNumber(repositoryDetails.pull_requests),
-      numberAvgComments: module.getAverageCommentsNumber(repositoryDetails.pull_requests),
-      noDescPR:          module.getPercentPullRequestsNoDesc(repositoryDetails.pull_requests),
-      descAvgCommits:    module.getAverageCommitsWords(repositoryDetails.pull_requests)
+      repository:         repositoryDetails.repository.name,
+      language:           repositoryDetails.repository.language,
+      numberPR:           repositoryDetails.pull_requests.length,
+      contributors:       module.getNumberContributors(repositoryDetails.pull_requests),
+      descAvgPR:          module.getAveragePullRequestsWords(repositoryDetails.pull_requests),
+      numberAvgCommits:   module.getAverageCommitsNumber(repositoryDetails.pull_requests),
+      numberAvgComments:  module.getAverageCommentsNumber(repositoryDetails.pull_requests),
+      noDescPR:           module.getPercentPullRequestsNoDesc(repositoryDetails.pull_requests),
+      noDescCommits:      module.getPercentCommitsNoDesc(repositoryDetails.pull_requests),
+      descAvgCommits:     module.getAverageCommitsWords(repositoryDetails.pull_requests)
     }
+  },
+
+  /**
+  * Get number of contributors that created a pull request
+  * @method getNumberContributors
+  * @public
+  * @param {Array} pullRequests
+  * @returns {Number}
+  */
+  getNumberContributors: function(pullRequests) {
+    return _.uniq(_.pluck(pullRequests,'user.id')).length
+  },
+
+  /**
+  * Get percentage of pull requests commits without description
+  * @method getPercentCommitsNoDesc
+  * @public
+  * @param {Array} pullRequests
+  * @returns {Number}
+  */
+  getPercentCommitsNoDesc: function (pullRequests) {
+    var totalCommits = 0
+    return pullRequests.length > 0 ?
+    _.reduce(pullRequests, function(sumForPR, pullRequest) {
+      return sumForPR + _.reduce(pullRequest.pull_request_commits,
+        function(sumForCommit, commitWrapper) {
+          totalCommits ++
+          return sumForCommit +
+            commitWrapper.commit.message.split('\n\n').length > 1 ? 0 : 1
+        }, 0)
+    }, 0) * 100  / totalCommits : 100
   },
 
   /**
@@ -80,13 +115,15 @@ module.exports = {
   * @returns {Number}
   */
   getAverageCommitsWords: function(pullRequests) {
+    var totalCommits = 0
     return pullRequests.length > 0 ?
     _.reduce(pullRequests, function(sumForPR, pullRequest) {
       return sumForPR + _.reduce(pullRequest.pull_request_commits,
         function(sumForCommit, commitWrapper) {
+          totalCommits ++
           return sumForCommit + commitWrapper.commit.message.split(' ').length
-        }, 0) / pullRequest.pull_request_commits.length
-    }, 0) / pullRequests.length : 0
+        }, 0)
+    }, 0) / totalCommits : 0
   },
 
   /**

@@ -1,4 +1,17 @@
 $(document).ready(function() {
+
+  /**
+  * Format number to a string with N decimals
+  * @method formatNumber
+  * @param {Number} number
+  * @param {?Number} precision - defaults to 2
+  * @returns {Strin}
+  */
+  var formatNumber = function(number, precision) {
+    precision = precision || 2
+    return number && number.toFixed(2)
+  }
+
   /**
    * Transform metrics object to datatable data array
    *
@@ -14,14 +27,15 @@ $(document).ready(function() {
 
       dataSet.push([
         data.repository,
+        data.language,
         data.numberPR,
-        data.descAvgPR.toFixed(2),
-        data.descAvgCommits.toFixed(2),
-        data.numberAvgCommits.toFixed(2),
-        data.numberAvgComments.toFixed(2),
-        data.noDescCommits || '-',
-        data.noDescPR.toFixed(2),
-        data.score || '-'
+        data.contributors,
+        formatNumber(data.descAvgPR),
+        formatNumber(data.descAvgCommits),
+        formatNumber(data.numberAvgCommits),
+        formatNumber(data.numberAvgComments),
+        formatNumber(data.noDescCommits),
+        formatNumber(data.noDescPR),
       ])
     }
     return dataSet
