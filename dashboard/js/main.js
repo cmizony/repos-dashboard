@@ -13,13 +13,15 @@ $(document).ready(function() {
   }
 
   /**
-   * Transform metrics object to datatable data array
-   *
-   * @function formatDataSet
-   * @param metrics
-   * returns {Array} dataset
-   */
-  var formatDataSet = function(metrics) {
+  * Transform metrics object to datatable data array
+  *
+  * @function formatDataSet
+  * @param {Object} data
+  * @param {Number} dataIndex
+  * returns {Array} dataset
+  */
+  var formatDataSet = function(data, dataIndex) {
+    var metrics = data[dataIndex].metrics
     var dataSet = []
 
     for (var i = 0 ; i < metrics.length ; i ++) {
@@ -44,32 +46,72 @@ $(document).ready(function() {
   /**
   * Use jQuery to udate DOM based on meta metrics
   *
-  * @function setMetaDOM
-  * @param {Object} meta
+  * @function setDOM
+  * @param {Object} metrics
   */
-  var setMetaDOM = function(meta) {
-    $('#organization-name').html(meta.organization)
-    $('#metrics-duration').html(meta.duration)
-    $('#last-update').html(new Date(meta.generated).toDateString())
+  var setDOM = function(metrics) {
+    $('#organization-name').html(metrics.meta.organization)
+    $('#metrics-duration').html(metrics.meta.periodDuration)
+    $('#last-update').html(new Date(metrics.meta.generated).toDateString())
+
+    $.each(metrics.data, function(index, value) {
+      $('#filter-tag').append(
+        $('<option/>').text(value.tag).val(index)
+      )
+    })
+
+    $('#filter-tag').change(function() {
+      var selectedTagIndex = $('#filter-tag option:selected').val()
+      datatable.clear()
+      datatable.rows.add(formatDataSet(metricsData.data, selectedTagIndex))
+      datatable.draw()
+    })
   }
 
   /**
    * Create datatable and update DOM meta elements
-   * @function initializeDashboard
+   * @function initializeDatatable
    * @param {Object} metrics
+   * @param {?Number} dataIndex
    */
-  var initializeDashboard = function (metrics) {
-    $('#repositories').DataTable( {
+  var initializeDatatable = function (metrics, dataIndex) {
+    dataIndex = dataIndex || 0
+
+    datatable = $('#repositories').DataTable( {
       info:     false,
-      data: formatDataSet(metrics.data),
-      order: [[1, 'desc']]
+      order: [[ 2, 'desc' ]],
+      dom: 'lBfrtip',
+      select: true,
+      buttons: [
+        {
+          extend: 'collection',
+          text: 'Export',
+          buttons: [
+            'copy',
+            'excel',
+            'csv',
+            'pdf'
+          ]
+        }
+      ],
+      data: formatDataSet(metrics.data, dataIndex)
     })
-    setMetaDOM(metrics.meta)
   }
+
+  /**
+  * @type {Object} metricsData - metrics.json
+  */
+  var metricsData
+  /**
+  * $type {Object} datatable - reference to Datatable repositories
+  */
+  var datatable
 
   // Bootstrap dashboard
   $.get('metrics.json', function(data) {
-    initializeDashboard(data)
+    metricsData = data
+    initializeDatatable(metricsData)
+    setDOM(metricsData)
   }).fail(function(error) {
     alert('Error loading data from "metrics.json"')
   })

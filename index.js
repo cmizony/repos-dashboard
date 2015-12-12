@@ -20,6 +20,7 @@ module.exports = {
   * @returns {Object} promise - resolves to gloablMetrics
   */
   generateMetrics: function(organization, monthsHistory, outputFilePath) {
+    var module = this
     var deferred = Q.defer()
     monthsHistory = monthsHistory || 3
     outputFilePath = outputFilePath || 'dashboard/metrics.json'
@@ -29,14 +30,31 @@ module.exports = {
       var meta = {
         organization: organization,
         generated: new Date().toISOString(),
-        duration: monthsHistory + ' months'
+        periodDuration: monthsHistory + ' months'
       }
 
       // 2. Generate data array of metrics
-      var data =  _.reduce(repositoriesDetails, function(result, repositoryDetails) {
-        result.push(metrics.getRepositoryMetrics(repositoryDetails))
-        return result
-      }, [])
+      var data = []
+      var today = new Date().getTime()
+      var milisecondPerMonths = 31 * 86400 * 1000
+      var firstDate = today - monthsHistory * milisecondPerMonths
+
+      data.push({
+        tag: 'Last ' + monthsHistory + ' months (' + monthsHistory * 31 + ' days)',
+        metrics: module.getFilteredRepoMetrics(repositoriesDetails, firstDate, today)
+      })
+      var time, history
+      for(time = today, history = 1;
+          time > firstDate;
+          time -= milisecondPerMonths, history++) {
+        data.push({
+          tag: history + ' months ago (31 days)',
+          metrics: module.getFilteredRepoMetrics(
+                    repositoriesDetails,
+                    time - milisecondPerMonths,
+                    time)
+        })
+      }
 
       // 3. Write output file
       var globalMetrics = {
@@ -49,5 +67,29 @@ module.exports = {
     }).catch(function(error) { deferred.reject(new Error(error)) })
 
     return deferred.promise
+  },
+
+  /**
+  * Generate repositories metrics for specific period of time
+  * @method getFilteredRepoMetrics
+  * @private
+  * @param {Array} repositoriesDetails
+  * @param {Object} start - date
+  * @param {Object} end - date
+  * @returns {Object} metrics
+  */
+  getFilteredRepoMetrics: function(repositoriesDetails, start, end) {
+    return _.reduce(repositoriesDetails, function(result, repositoryDetails) {
+      result.push(metrics.getRepositoryMetrics(
+        repositoryDetails.repository,
+        _.filter(repositoryDetails.pull_requests, function(pr) {
+            var prTime = new Date(pr.created_at).getTime()
+            return prTime >= start && prTime <= end
+          }
+        )
+      ))
+      return result
+    }, [])
   }
+
 }
