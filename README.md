@@ -1,3 +1,5 @@
+![Demo dashboard result](demo.png)
+
 # Repos dashboard
 
 Create table view of metrics for all repositories of a given Github organization.
@@ -37,8 +39,6 @@ few minutes to finish caching your data locally.*
 1. Make sure you have `dashboard/metrics.json` file generated
 2. Run webserver: `./node_modules/.bin/http-server dashboard`
 2. Open `http://localhost:8080`
-
-![Demo dashboard result](demo.png)
 
 ## Features
 
